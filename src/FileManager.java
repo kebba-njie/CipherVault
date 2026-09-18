@@ -13,6 +13,20 @@ import java.security.SecureRandom;
 public class FileManager {
 
     private static final String VAULT_FOLDER = "vault";
+    private static String getSafeVaultPath(String fileName) {
+
+        java.nio.file.Path vaultPath =
+                Paths.get(VAULT_FOLDER).toAbsolutePath().normalize();
+
+        java.nio.file.Path requestedPath =
+                vaultPath.resolve(fileName).normalize();
+
+        if (!requestedPath.startsWith(vaultPath)) {
+            throw new SecurityException("Invalid file path.");
+        }
+
+        return requestedPath.toString();
+    }
 
     public static void initializeVault() {
 
@@ -48,10 +62,7 @@ public class FileManager {
 
         try {
 
-            String filePath = Paths.get(
-                    VAULT_FOLDER,
-                    fileName
-            ).toString();
+            String filePath = getSafeVaultPath(fileName);
 
             FileWriter writer = new FileWriter(filePath);
 
@@ -64,12 +75,15 @@ public class FileManager {
 
             logActivity("File stored: " + fileName);
 
+        } catch (SecurityException e) {
+
+            System.out.println("Invalid file path.");
+
         } catch (IOException e) {
 
             System.out.println("Error storing file.");
         }
     }
-
     public static void viewFiles() {
 
         java.io.File folder = new java.io.File(".");
