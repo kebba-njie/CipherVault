@@ -1,6 +1,14 @@
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Scanner;
+import java.io.FileOutputStream;
+import javax.crypto.Cipher;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.SecureRandom;
 
 public class FileManager {
 
@@ -65,32 +73,45 @@ public class FileManager {
 
         try {
 
-            byte[] fileData = java.nio.file.Files.readAllBytes(
-                    java.nio.file.Paths.get(fileName)
+            byte[] fileData = Files.readAllBytes(
+                    Paths.get(fileName)
             );
 
-            javax.crypto.spec.SecretKeySpec secretKey =
-                    new javax.crypto.spec.SecretKeySpec(
-                            key.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+            SecretKeySpec secretKey =
+                    new SecretKeySpec(
+                            key.getBytes(StandardCharsets.UTF_8),
                             "AES"
                     );
 
-            javax.crypto.Cipher cipher =
-                    javax.crypto.Cipher.getInstance("AES");
+            Cipher cipher =
+                    Cipher.getInstance("AES/GCM/NoPadding");
+
+            byte[] iv = new byte[12];
+
+            new SecureRandom().nextBytes(iv);
+
+            GCMParameterSpec gcmSpec =
+                    new GCMParameterSpec(128, iv);
 
             cipher.init(
-                    javax.crypto.Cipher.ENCRYPT_MODE,
-                    secretKey
+                    Cipher.ENCRYPT_MODE,
+                    secretKey,
+                    gcmSpec
             );
 
             byte[] encryptedData = cipher.doFinal(fileData);
 
-            java.nio.file.Files.write(
-                    java.nio.file.Paths.get(fileName + ".enc"),
-                    encryptedData
-            );
+            FileOutputStream output =
+                    new FileOutputStream(fileName + ".enc");
+
+            output.write(iv);
+            output.write(encryptedData);
+
+            output.close();
 
             System.out.println("File encrypted successfully!");
+            System.out.println("Encryption mode: AES-GCM");
+
             logActivity("File encrypted: " + fileName);
 
         } catch (Exception e) {
@@ -103,34 +124,64 @@ public class FileManager {
 
         try {
 
-            byte[] encryptedData = java.nio.file.Files.readAllBytes(
-                    java.nio.file.Paths.get(fileName)
+            byte[] encryptedFileData = Files.readAllBytes(
+                    Paths.get(fileName)
             );
 
-            javax.crypto.spec.SecretKeySpec secretKey =
-                    new javax.crypto.spec.SecretKeySpec(
-                            key.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+            byte[] iv = new byte[12];
+
+            System.arraycopy(
+                    encryptedFileData,
+                    0,
+                    iv,
+                    0,
+                    12
+            );
+
+            byte[] encryptedData = new byte[
+                    encryptedFileData.length - 12
+                    ];
+
+            System.arraycopy(
+                    encryptedFileData,
+                    12,
+                    encryptedData,
+                    0,
+                    encryptedData.length
+            );
+
+            SecretKeySpec secretKey =
+                    new SecretKeySpec(
+                            key.getBytes(StandardCharsets.UTF_8),
                             "AES"
                     );
 
-            javax.crypto.Cipher cipher =
-                    javax.crypto.Cipher.getInstance("AES");
+            Cipher cipher =
+                    Cipher.getInstance("AES/GCM/NoPadding");
+
+            GCMParameterSpec gcmSpec =
+                    new GCMParameterSpec(128, iv);
 
             cipher.init(
-                    javax.crypto.Cipher.DECRYPT_MODE,
-                    secretKey
+                    Cipher.DECRYPT_MODE,
+                    secretKey,
+                    gcmSpec
             );
 
             byte[] decryptedData = cipher.doFinal(encryptedData);
 
-            java.nio.file.Files.write(
-                    java.nio.file.Paths.get(
-                            "decrypted_" + fileName.replace(".enc", "")
-                    ),
+            String outputFileName =
+                    "decrypted_" + fileName.replace(".enc", "");
+
+            Files.write(
+                    Paths.get(outputFileName),
                     decryptedData
             );
 
             System.out.println("File decrypted successfully!");
+            System.out.println("Encryption mode: AES-GCM");
+
+            logActivity("File decrypted: " + fileName);
 
         } catch (Exception e) {
 
