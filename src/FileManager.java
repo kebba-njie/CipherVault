@@ -12,9 +12,24 @@ import java.security.SecureRandom;
 
 public class FileManager {
 
+    private static final String VAULT_FOLDER = "vault";
+
+    public static void initializeVault() {
+
+        try {
+
+            Files.createDirectories(Paths.get(VAULT_FOLDER));
+
+        } catch (IOException e) {
+
+            System.out.println("Error creating vault folder.");
+        }
+    }
+
     public static void saveAccount(String username, String hashedPassword, String role) {
 
         try {
+
             FileWriter writer = new FileWriter("accounts.txt", true);
 
             writer.write(username + ":" + hashedPassword + ":" + role + "\n");
@@ -24,6 +39,7 @@ public class FileManager {
             System.out.println("Account saved successfully!");
 
         } catch (IOException e) {
+
             System.out.println("Error saving account.");
         }
     }
@@ -31,16 +47,25 @@ public class FileManager {
     public static void storeFile(String fileName, String content) {
 
         try {
-            FileWriter writer = new FileWriter(fileName);
+
+            String filePath = Paths.get(
+                    VAULT_FOLDER,
+                    fileName
+            ).toString();
+
+            FileWriter writer = new FileWriter(filePath);
 
             writer.write(content);
 
             writer.close();
 
             System.out.println("File stored successfully!");
+            System.out.println("Location: vault/" + fileName);
+
             logActivity("File stored: " + fileName);
 
         } catch (IOException e) {
+
             System.out.println("Error storing file.");
         }
     }
