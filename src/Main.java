@@ -311,6 +311,10 @@ public class Main {
 
                     System.out.println();
                     System.out.println("Invalid username or password.");
+
+                    FileManager.logActivity(
+                            "Failed login attempt: " + loginUsername
+                    );
                 }
 
             } catch (Exception e) {
