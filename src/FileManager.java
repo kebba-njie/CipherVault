@@ -13,6 +13,7 @@ import java.security.SecureRandom;
 public class FileManager {
 
     private static final String VAULT_FOLDER = "vault";
+    private static final String INTEGRITY_FILE = "integrity.txt";
     private static String getSafeVaultPath(String fileName) {
 
         java.nio.file.Path vaultPath =
@@ -232,8 +233,10 @@ public class FileManager {
 
         try {
 
-            byte[] fileData = java.nio.file.Files.readAllBytes(
-                    java.nio.file.Paths.get(fileName)
+            String filePath = getSafeVaultPath(fileName);
+
+            byte[] fileData = Files.readAllBytes(
+                    Paths.get(filePath)
             );
 
             java.security.MessageDigest digest =
@@ -254,22 +257,85 @@ public class FileManager {
                 hexString.append(hex);
             }
 
+            String currentHash = hexString.toString();
+
+            java.io.File integrityFile =
+                    new java.io.File(INTEGRITY_FILE);
+
+            String storedHash = null;
+
+            if (integrityFile.exists()) {
+
+                Scanner scanner =
+                        new Scanner(integrityFile);
+
+                while (scanner.hasNextLine()) {
+
+                    String line = scanner.nextLine();
+
+                    if (line.startsWith(fileName + ":")) {
+
+                        storedHash =
+                                line.substring(fileName.length() + 1);
+
+                        break;
+                    }
+                }
+
+                scanner.close();
+            }
+
             System.out.println();
             System.out.println("-------- FILE INTEGRITY --------");
             System.out.println("File: " + fileName);
             System.out.println("SHA-256 Hash:");
-            System.out.println(hexString);
-            System.out.println("Integrity check completed.");
-            logActivity("Integrity check performed: " + fileName);
+            System.out.println(currentHash);
+
+            if (storedHash == null) {
+
+                FileWriter writer =
+                        new FileWriter(INTEGRITY_FILE, true);
+
+                writer.write(fileName + ":" + currentHash + "\n");
+
+                writer.close();
+
+                System.out.println("Integrity status: BASELINE CREATED");
+
+            } else if (storedHash.equals(currentHash)) {
+
+                System.out.println("Integrity status: VERIFIED");
+                System.out.println("File has not been modified.");
+
+            } else {
+
+                System.out.println("Integrity status: WARNING");
+                System.out.println("File has been modified!");
+
+                logActivity(
+                        "INTEGRITY WARNING: File modified - "
+                                + fileName
+                );
+            }
+
+            logActivity(
+                    "Integrity check performed: "
+                            + fileName
+            );
+
+        } catch (SecurityException e) {
+
+            System.out.println("Invalid file path.");
 
         } catch (Exception e) {
 
             System.out.println("Error checking file integrity.");
+
         }
+
     }
 
     public static void logActivity(String activity) {
-
         try {
 
             FileWriter writer = new FileWriter("security.log", true);
