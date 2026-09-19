@@ -1,38 +1,84 @@
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
+import java.util.Base64;
 import java.util.Scanner;
+
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 
 public class Main {
 
     public static String hashPassword(String password) {
 
         try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
 
-            byte[] hash = digest.digest(
-                    password.getBytes(StandardCharsets.UTF_8)
+            byte[] salt = new byte[16];
+
+            SecureRandom random = new SecureRandom();
+            random.nextBytes(salt);
+
+            PBEKeySpec spec = new PBEKeySpec(
+                    password.toCharArray(),
+                    salt,
+                    120000,
+                    256
             );
 
-            StringBuilder hexString = new StringBuilder();
+            SecretKeyFactory factory =
+                    SecretKeyFactory.getInstance(
+                            "PBKDF2WithHmacSHA256"
+                    );
 
-            for (byte b : hash) {
-                String hex = Integer.toHexString(0xff & b);
+            byte[] hash =
+                    factory.generateSecret(spec).getEncoded();
 
-                if (hex.length() == 1) {
-                    hexString.append('0');
-                }
+            return Base64.getEncoder().encodeToString(salt)
+                    + ":"
+                    + Base64.getEncoder().encodeToString(hash);
 
-                hexString.append(hex);
-            }
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
 
-            return hexString.toString();
-
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Hashing algorithm not available.", e);
+            throw new RuntimeException(
+                    "Password hashing failed.",
+                    e
+            );
         }
     }
+    public static boolean verifyPassword(String password, String storedPassword) {
 
+        try {
+
+            String[] parts = storedPassword.split(":");
+
+            byte[] salt = Base64.getDecoder().decode(parts[0]);
+            byte[] storedHash = Base64.getDecoder().decode(parts[1]);
+
+            PBEKeySpec spec = new PBEKeySpec(
+                    password.toCharArray(),
+                    salt,
+                    120000,
+                    256
+            );
+
+            SecretKeyFactory factory =
+                    SecretKeyFactory.getInstance(
+                            "PBKDF2WithHmacSHA256"
+                    );
+
+            byte[] newHash =
+                    factory.generateSecret(spec).getEncoded();
+
+            return java.util.Arrays.equals(
+                    storedHash,
+                    newHash
+            );
+
+        } catch (Exception e) {
+
+            return false;
+        }
+    }
     public static void main(String[] args) {
         FileManager.initializeVault();
 
@@ -114,7 +160,7 @@ public class Main {
                 return;
             }
 
-            String loginHash = hashPassword(loginPassword);
+            String loginHash = loginPassword;
 
 
             try {
@@ -130,16 +176,32 @@ public class Main {
 
                     String account = fileScanner.nextLine();
 
-                    String[] accountData = account.split(":");
+                    String[] accountData = account.split(":", 4);
+
+                    if (accountData.length < 3) {
+                        continue;
+                    }
 
                     String storedUsername = accountData[0];
-                    String storedHash = accountData[1];
-                    String storedRole = accountData.length >= 3
-                            ? accountData[2]
-                            : "USER";
 
+                    String storedHash;
+                    String storedRole;
+
+                    if (accountData.length == 4) {
+
+                        storedHash = accountData[1] + ":"
+                                + accountData[2];
+
+                        storedRole = accountData[3];
+
+                    } else {
+
+                        storedHash = accountData[1];
+
+                        storedRole = accountData[2];
+                    }
                     if (loginUsername.equals(storedUsername)
-                            && loginHash.equals(storedHash)) {
+                            && verifyPassword(loginHash, storedHash)) {
 
                         loginSuccessful = true;
                         loggedInRole = storedRole;
