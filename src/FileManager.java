@@ -336,22 +336,38 @@ public class FileManager {
     }
 
     public static void logActivity(String activity) {
+
         try {
 
-            FileWriter writer = new FileWriter("security.log", true);
+            FileWriter writer =
+                    new FileWriter("security.log", true);
 
-            writer.write(activity + "\n");
+            String timestamp =
+                    java.time.LocalDateTime.now()
+                            .format(
+                                    java.time.format.DateTimeFormatter
+                                            .ofPattern("yyyy-MM-dd HH:mm:ss")
+                            );
+
+            writer.write(
+                    "[" + timestamp + "] "
+                            + activity
+                            + "\n"
+            );
 
             writer.close();
 
-            System.out.println("Security activity logged.");
+            System.out.println(
+                    "Security activity logged."
+            );
 
         } catch (IOException e) {
 
-            System.out.println("Error writing security log.");
+            System.out.println(
+                    "Error writing security log."
+            );
         }
     }
-
     public static void viewSecurityLog() {
 
         try {
