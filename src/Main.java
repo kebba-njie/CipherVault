@@ -45,14 +45,20 @@ public class Main {
             );
         }
     }
-    public static boolean verifyPassword(String password, String storedPassword) {
+
+    public static boolean verifyPassword(
+            String password,
+            String storedPassword) {
 
         try {
 
             String[] parts = storedPassword.split(":");
 
-            byte[] salt = Base64.getDecoder().decode(parts[0]);
-            byte[] storedHash = Base64.getDecoder().decode(parts[1]);
+            byte[] salt =
+                    Base64.getDecoder().decode(parts[0]);
+
+            byte[] storedHash =
+                    Base64.getDecoder().decode(parts[1]);
 
             PBEKeySpec spec = new PBEKeySpec(
                     password.toCharArray(),
@@ -79,7 +85,9 @@ public class Main {
             return false;
         }
     }
+
     public static void main(String[] args) {
+
         FileManager.initializeVault();
 
         Scanner scanner = new Scanner(System.in);
@@ -108,6 +116,7 @@ public class Main {
             String username = scanner.nextLine();
 
             if (username.trim().isEmpty()) {
+
                 System.out.println("Username cannot be empty.");
                 scanner.close();
                 return;
@@ -117,21 +126,32 @@ public class Main {
             String password = scanner.nextLine();
 
             if (password.trim().isEmpty()) {
+
                 System.out.println("Password cannot be empty.");
                 scanner.close();
                 return;
             }
 
             if (password.length() < 8) {
-                System.out.println("Password must be at least 8 characters.");
+
+                System.out.println(
+                        "Password must be at least 8 characters."
+                );
+
                 scanner.close();
                 return;
             }
+
             String role = "USER";
 
-            String hashedPassword = hashPassword(password);
+            String hashedPassword =
+                    hashPassword(password);
 
-            FileManager.saveAccount(username, hashedPassword, role);
+            FileManager.saveAccount(
+                    username,
+                    hashedPassword,
+                    role
+            );
 
             System.out.println();
             System.out.println("Account created successfully!");
@@ -139,196 +159,315 @@ public class Main {
 
         } else if (choice == 2) {
 
-            System.out.println();
-            System.out.println("------------- LOGIN -------------");
+            int loginAttempts = 0;
+            boolean loginSuccessful = false;
+            String loginUsername = "";
+            String loggedInRole = "USER";
 
-            System.out.print("Enter username: ");
-            String loginUsername = scanner.nextLine();
+            while (loginAttempts < 3 && !loginSuccessful) {
 
-            if (loginUsername.trim().isEmpty()) {
-                System.out.println("Username cannot be empty.");
-                scanner.close();
-                return;
-            }
+                System.out.println();
+                System.out.println("------------- LOGIN -------------");
 
-            System.out.print("Enter password: ");
-            String loginPassword = scanner.nextLine();
+                System.out.print("Enter username: ");
+                loginUsername = scanner.nextLine();
 
-            if (loginPassword.trim().isEmpty()) {
-                System.out.println("Password cannot be empty.");
-                scanner.close();
-                return;
-            }
+                if (loginUsername.trim().isEmpty()) {
 
-            String loginHash = loginPassword;
-
-
-            try {
-
-                Scanner fileScanner = new Scanner(
-                        new java.io.File("accounts.txt")
-                );
-
-                boolean loginSuccessful = false;
-                String loggedInRole = "USER";
-
-                while (fileScanner.hasNextLine()) {
-
-                    String account = fileScanner.nextLine();
-
-                    String[] accountData = account.split(":", 4);
-
-                    if (accountData.length < 3) {
-                        continue;
-                    }
-
-                    String storedUsername = accountData[0];
-
-                    String storedHash;
-                    String storedRole;
-
-                    if (accountData.length == 4) {
-
-                        storedHash = accountData[1] + ":"
-                                + accountData[2];
-
-                        storedRole = accountData[3];
-
-                    } else {
-
-                        storedHash = accountData[1];
-
-                        storedRole = accountData[2];
-                    }
-                    if (loginUsername.equals(storedUsername)
-                            && verifyPassword(loginHash, storedHash)) {
-
-                        loginSuccessful = true;
-                        loggedInRole = storedRole;
-                        break;
-                    }
-                }
-
-                fileScanner.close();
-
-                if (loginSuccessful) {
-
-                    System.out.println();
-                    System.out.println("Login successful!");
-                    System.out.println("Welcome back, " + loginUsername + "!");
-                    System.out.println("Role: " + loggedInRole);
-
-                    FileManager.logActivity(
-                            "User logged in: " + loginUsername
+                    System.out.println(
+                            "Username cannot be empty."
                     );
 
-                    boolean loggedIn = true;
+                    continue;
+                }
 
-                    while (loggedIn) {
+                System.out.print("Enter password: ");
+                String loginPassword = scanner.nextLine();
 
-                        System.out.println();
-                        System.out.println("-------- CIPHERVAULT --------");
-                        System.out.println("1. Store File");
-                        System.out.println("2. View Files");
-                        System.out.println("3. Encrypt File");
-                        System.out.println("4. Decrypt File");
-                        System.out.println("5. File Integrity Check");
-                        System.out.println("6. Security Log");
-                        System.out.println("7. Logout");
+                if (loginPassword.trim().isEmpty()) {
 
-                        System.out.print("Select an option: ");
-                        int vaultChoice = scanner.nextInt();
-                        scanner.nextLine();
+                    System.out.println(
+                            "Password cannot be empty."
+                    );
 
-                        if (vaultChoice == 1) {
+                    continue;
+                }
 
-                            System.out.print("Enter file name: ");
-                            String fileName = scanner.nextLine();
+                String loginHash = loginPassword;
 
-                            System.out.print("Enter file content: ");
-                            String content = scanner.nextLine();
+                try {
 
-                            FileManager.storeFile(fileName, content);
-
-                        } else if (vaultChoice == 2) {
-
-                            FileManager.viewFiles();
-
-                        } else if (vaultChoice == 3) {
-
-                            System.out.print("Enter file name to encrypt: ");
-                            String fileName = scanner.nextLine();
-
-                            System.out.print("Enter encryption key (16 characters): ");
-                            String key = scanner.nextLine();
-
-                            FileManager.encryptFile(fileName, key);
-
-                        } else if (vaultChoice == 4) {
-
-                            System.out.print("Enter encrypted file name: ");
-                            String fileName = scanner.nextLine();
-
-                            System.out.print("Enter encryption key (16 characters): ");
-                            String key = scanner.nextLine();
-
-                            FileManager.decryptFile(fileName, key);
-
-                        } else if (vaultChoice == 5) {
-
-                            System.out.print("Enter file name to check: ");
-                            String fileName = scanner.nextLine();
-
-                            FileManager.checkFileIntegrity(fileName);
-
-                        } else if (vaultChoice == 6) {
-
-                            if (loggedInRole.equals("ADMIN")) {
-
-                                FileManager.viewSecurityLog();
-
-                            } else {
-
-                                System.out.println("Access denied. Admin permission required.");
-                            }
-                        } else if (vaultChoice == 7) {
-
-                            loggedIn = false;
-
-                            System.out.println("Logged out successfully!");
-
-                            FileManager.logActivity(
-                                    "User logged out: " + loginUsername
+                    Scanner fileScanner =
+                            new Scanner(
+                                    new java.io.File("accounts.txt")
                             );
+
+                    while (fileScanner.hasNextLine()) {
+
+                        String account =
+                                fileScanner.nextLine();
+
+                        String[] accountData =
+                                account.split(":", 4);
+
+                        if (accountData.length < 3) {
+
+                            continue;
+                        }
+
+                        String storedUsername =
+                                accountData[0];
+
+                        String storedHash;
+                        String storedRole;
+
+                        if (accountData.length == 4) {
+
+                            storedHash =
+                                    accountData[1] + ":"
+                                            + accountData[2];
+
+                            storedRole =
+                                    accountData[3];
 
                         } else {
 
-                            System.out.println("This feature is coming soon.");
+                            storedHash =
+                                    accountData[1];
+
+                            storedRole =
+                                    accountData[2];
+                        }
+
+                        if (loginUsername.equals(storedUsername)
+                                && verifyPassword(
+                                loginHash,
+                                storedHash)) {
+
+                            loginSuccessful = true;
+                            loggedInRole = storedRole;
+
+                            break;
                         }
                     }
 
-                } else {
+                    fileScanner.close();
 
-                    System.out.println();
-                    System.out.println("Invalid username or password.");
+                } catch (Exception e) {
 
-                    FileManager.logActivity(
-                            "Failed login attempt: " + loginUsername
+                    System.out.println(
+                            "Error reading account data."
                     );
+
+                    break;
                 }
 
-            } catch (Exception e) {
+                if (!loginSuccessful) {
 
-                System.out.println("Error reading account data.");
+                    loginAttempts++;
+
+                    System.out.println();
+                    System.out.println(
+                            "Invalid username or password."
+                    );
+
+                    FileManager.logActivity(
+                            "Failed login attempt: "
+                                    + loginUsername
+                    );
+
+                    if (loginAttempts < 3) {
+
+                        System.out.println(
+                                "Attempts remaining: "
+                                        + (3 - loginAttempts)
+                        );
+
+                    } else {
+
+                        System.out.println();
+                        System.out.println(
+                                "Too many failed login attempts."
+                        );
+
+                        System.out.println(
+                                "Access temporarily blocked."
+                        );
+                    }
+                }
+            }
+
+            if (loginSuccessful) {
+
+                System.out.println();
+                System.out.println("Login successful!");
+                System.out.println(
+                        "Welcome back, "
+                                + loginUsername + "!"
+                );
+
+                System.out.println(
+                        "Role: " + loggedInRole
+                );
+
+                FileManager.logActivity(
+                        "User logged in: "
+                                + loginUsername
+                );
+
+                boolean loggedIn = true;
+
+                while (loggedIn) {
+
+                    System.out.println();
+                    System.out.println(
+                            "-------- CIPHERVAULT --------"
+                    );
+
+                    System.out.println("1. Store File");
+                    System.out.println("2. View Files");
+                    System.out.println("3. Encrypt File");
+                    System.out.println("4. Decrypt File");
+                    System.out.println(
+                            "5. File Integrity Check"
+                    );
+                    System.out.println("6. Security Log");
+                    System.out.println("7. Logout");
+
+                    System.out.print("Select an option: ");
+
+                    int vaultChoice =
+                            scanner.nextInt();
+
+                    scanner.nextLine();
+
+                    if (vaultChoice == 1) {
+
+                        System.out.print(
+                                "Enter file name: "
+                        );
+
+                        String fileName =
+                                scanner.nextLine();
+
+                        System.out.print(
+                                "Enter file content: "
+                        );
+
+                        String content =
+                                scanner.nextLine();
+
+                        FileManager.storeFile(
+                                fileName,
+                                content
+                        );
+
+                    } else if (vaultChoice == 2) {
+
+                        FileManager.viewFiles();
+
+                    } else if (vaultChoice == 3) {
+
+                        System.out.print(
+                                "Enter file name to encrypt: "
+                        );
+
+                        String fileName =
+                                scanner.nextLine();
+
+                        System.out.print(
+                                "Enter encryption key (16 characters): "
+                        );
+
+                        String key =
+                                scanner.nextLine();
+
+                        FileManager.encryptFile(
+                                fileName,
+                                key
+                        );
+
+                    } else if (vaultChoice == 4) {
+
+                        System.out.print(
+                                "Enter encrypted file name: "
+                        );
+
+                        String fileName =
+                                scanner.nextLine();
+
+                        System.out.print(
+                                "Enter encryption key (16 characters): "
+                        );
+
+                        String key =
+                                scanner.nextLine();
+
+                        FileManager.decryptFile(
+                                fileName,
+                                key
+                        );
+
+                    } else if (vaultChoice == 5) {
+
+                        System.out.print(
+                                "Enter file name to check: "
+                        );
+
+                        String fileName =
+                                scanner.nextLine();
+
+                        FileManager.checkFileIntegrity(
+                                fileName
+                        );
+
+                    } else if (vaultChoice == 6) {
+
+                        if (loggedInRole.equals("ADMIN")) {
+
+                            FileManager.viewSecurityLog();
+
+                        } else {
+
+                            System.out.println(
+                                    "Access denied. "
+                                            + "Admin permission required."
+                            );
+                        }
+
+                    } else if (vaultChoice == 7) {
+
+                        loggedIn = false;
+
+                        System.out.println(
+                                "Logged out successfully!"
+                        );
+
+                        FileManager.logActivity(
+                                "User logged out: "
+                                        + loginUsername
+                        );
+
+                    } else {
+
+                        System.out.println(
+                                "This feature is coming soon."
+                        );
+                    }
+                }
             }
 
         } else if (choice == 3) {
 
-            System.out.println("Exiting CipherVault...");
+            System.out.println(
+                    "Exiting CipherVault..."
+            );
 
         } else {
 
-            System.out.println("Invalid option.");
+            System.out.println(
+                    "Invalid option."
+            );
         }
 
         scanner.close();
