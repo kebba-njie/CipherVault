@@ -10,6 +10,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.SecureRandom;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 
 public class FileManager {
 
@@ -146,6 +148,41 @@ public class FileManager {
             System.out.println("No files found.");
         }
     }
+    private static SecretKeySpec deriveEncryptionKey(
+            String password,
+            byte[] salt) {
+
+        try {
+
+            PBEKeySpec spec = new PBEKeySpec(
+                    password.toCharArray(),
+                    salt,
+                    120000,
+                    256
+            );
+
+            SecretKeyFactory factory =
+                    SecretKeyFactory.getInstance(
+                            "PBKDF2WithHmacSHA256"
+                    );
+
+            byte[] key =
+                    factory.generateSecret(spec)
+                            .getEncoded();
+
+            return new SecretKeySpec(
+                    key,
+                    "AES"
+            );
+
+        } catch (Exception e) {
+
+            throw new RuntimeException(
+                    "Encryption key generation failed.",
+                    e
+            );
+        }
+    }
 
     public static void encryptFile(String fileName, String key) {
 
@@ -155,10 +192,14 @@ public class FileManager {
                     Paths.get(fileName)
             );
 
+            byte[] salt = new byte[16];
+
+            new SecureRandom().nextBytes(salt);
+
             SecretKeySpec secretKey =
-                    new SecretKeySpec(
-                            key.getBytes(StandardCharsets.UTF_8),
-                            "AES"
+                    deriveEncryptionKey(
+                            key,
+                            salt
                     );
 
             Cipher cipher =
@@ -182,9 +223,9 @@ public class FileManager {
             FileOutputStream output =
                     new FileOutputStream(fileName + ".enc");
 
+            output.write(salt);
             output.write(iv);
             output.write(encryptedData);
-
             output.close();
 
             System.out.println("File encrypted successfully!");
@@ -206,32 +247,42 @@ public class FileManager {
                     Paths.get(fileName)
             );
 
-            byte[] iv = new byte[12];
+            byte[] salt = new byte[16];
 
             System.arraycopy(
                     encryptedFileData,
                     0,
+                    salt,
+                    0,
+                    16
+            );
+
+            byte[] iv = new byte[12];
+
+            System.arraycopy(
+                    encryptedFileData,
+                    16,
                     iv,
                     0,
                     12
             );
 
             byte[] encryptedData = new byte[
-                    encryptedFileData.length - 12
+                    encryptedFileData.length - 28
                     ];
 
             System.arraycopy(
                     encryptedFileData,
-                    12,
+                    28,
                     encryptedData,
                     0,
                     encryptedData.length
             );
 
             SecretKeySpec secretKey =
-                    new SecretKeySpec(
-                            key.getBytes(StandardCharsets.UTF_8),
-                            "AES"
+                    deriveEncryptionKey(
+                            key,
+                            salt
                     );
 
             Cipher cipher =
@@ -263,7 +314,8 @@ public class FileManager {
 
         } catch (Exception e) {
 
-            System.out.println("Error decrypting file.");
+            System.out.println("Error encrypting file.");
+            e.printStackTrace();
         }
     }
 
