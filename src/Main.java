@@ -277,14 +277,6 @@ public class Main {
 
                 System.out.print("Enter username: ");
                 loginUsername = scanner.nextLine();
-                if (LockoutManager.isLocked(loginUsername)) {
-
-                    System.out.println();
-                    System.out.println("Account is temporarily locked.");
-                    System.out.println("Please try again later.");
-
-                    break;
-                }
 
                 if (loginUsername.trim().isEmpty()) {
 
@@ -295,6 +287,14 @@ public class Main {
                     continue;
                 }
 
+                if (LockoutManager.isLocked(loginUsername)) {
+
+                    System.out.println();
+                    System.out.println("Account is temporarily locked.");
+                    System.out.println("Please try again later.");
+
+                    break;
+                }
                 System.out.print("Enter password: ");
                 String loginPassword = scanner.nextLine();
 
