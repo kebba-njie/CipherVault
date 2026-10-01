@@ -121,6 +121,15 @@ public class Main {
                 scanner.close();
                 return;
             }
+            if (FileManager.accountExists(username)) {
+
+                System.out.println(
+                        "Username already exists."
+                );
+
+                scanner.close();
+                return;
+            }
 
             System.out.print("Enter password: ");
             String password = scanner.nextLine();
@@ -131,6 +140,7 @@ public class Main {
                 scanner.close();
                 return;
             }
+
 
             if (password.length() < 8) {
 

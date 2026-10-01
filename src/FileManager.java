@@ -1,3 +1,4 @@
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Scanner;
@@ -57,6 +58,43 @@ public class FileManager {
 
             System.out.println("Error saving account.");
         }
+    }
+    public static boolean accountExists(String username) {
+
+        File file = new File("accounts.txt");
+
+        if (!file.exists()) {
+            return false;
+        }
+
+        try {
+
+            Scanner scanner = new Scanner(file);
+
+            while (scanner.hasNextLine()) {
+
+                String line = scanner.nextLine();
+
+                String[] accountData = line.split(":", 4);
+
+                if (accountData.length >= 1
+                        && accountData[0].equals(username)) {
+
+                    scanner.close();
+                    return true;
+                }
+            }
+
+            scanner.close();
+
+        } catch (Exception e) {
+
+            System.out.println(
+                    "Error checking account data."
+            );
+        }
+
+        return false;
     }
 
     public static void storeFile(String fileName, String content) {
