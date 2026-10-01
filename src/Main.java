@@ -141,11 +141,70 @@ public class Main {
                 return;
             }
 
-
             if (password.length() < 8) {
 
                 System.out.println(
                         "Password must be at least 8 characters."
+                );
+
+                scanner.close();
+                return;
+            }
+
+            boolean hasUppercase = false;
+
+            for (char character : password.toCharArray()) {
+
+                if (Character.isUpperCase(character)) {
+                    hasUppercase = true;
+                    break;
+                }
+            }
+
+            if (!hasUppercase) {
+
+                System.out.println(
+                        "Password must contain at least one uppercase letter."
+                );
+
+                scanner.close();
+                return;
+            }
+
+            boolean hasLowercase = false;
+
+            for (char character : password.toCharArray()) {
+
+                if (Character.isLowerCase(character)) {
+                    hasLowercase = true;
+                    break;
+                }
+            }
+
+            if (!hasLowercase) {
+
+                System.out.println(
+                        "Password must contain at least one lowercase letter."
+                );
+
+                scanner.close();
+                return;
+            }
+
+            boolean hasNumber = false;
+
+            for (char character : password.toCharArray()) {
+
+                if (Character.isDigit(character)) {
+                    hasNumber = true;
+                    break;
+                }
+            }
+
+            if (!hasNumber) {
+
+                System.out.println(
+                        "Password must contain at least one number."
                 );
 
                 scanner.close();
@@ -166,6 +225,7 @@ public class Main {
             System.out.println();
             System.out.println("Account created successfully!");
             System.out.println("Password secured and account saved.");
+
 
         } else if (choice == 2) {
 
