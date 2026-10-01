@@ -225,6 +225,29 @@ public class Main {
                 return;
             }
 
+            if (!hasNumber) {
+
+                System.out.println(
+                        "Password must contain at least one number."
+                );
+
+                scanner.close();
+                return;
+            }
+
+            System.out.print("Confirm password: ");
+            String confirmPassword = scanner.nextLine();
+
+            if (!password.equals(confirmPassword)) {
+
+                System.out.println(
+                        "Passwords do not match."
+                );
+
+                scanner.close();
+                return;
+            }
+
             String role = "USER";
 
             String hashedPassword =
@@ -235,7 +258,6 @@ public class Main {
                     hashedPassword,
                     role
             );
-
             System.out.println();
             System.out.println("Account created successfully!");
             System.out.println("Password secured and account saved.");
