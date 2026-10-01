@@ -117,10 +117,24 @@ public class Main {
 
             if (username.trim().isEmpty()) {
 
-                System.out.println("Username cannot be empty.");
+                System.out.println(
+                        "Username cannot be empty."
+                );
+
                 scanner.close();
                 return;
             }
+
+            if (username.contains(" ")) {
+
+                System.out.println(
+                        "Username cannot contain spaces."
+                );
+
+                scanner.close();
+                return;
+            }
+
             if (FileManager.accountExists(username)) {
 
                 System.out.println(
