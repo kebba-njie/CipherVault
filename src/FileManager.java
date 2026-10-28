@@ -99,11 +99,32 @@ public class FileManager {
         return false;
     }
 
+
     public static void storeFile(String fileName, String content) {
+
+        if (fileName == null || fileName.trim().isEmpty()) {
+            System.out.println("Filename cannot be empty.");
+            return;
+        }
+
+        if (content == null) {
+            System.out.println("File content cannot be empty.");
+            return;
+        }
+
+        String safeFileName = fileName.trim();
+
+        if (!safeFileName.matches("[a-zA-Z0-9._-]+")
+                || safeFileName.equals(".")
+                || safeFileName.equals("..")) {
+
+            System.out.println("Invalid filename. Use only letters, numbers, dots, underscores, and hyphens.");
+            return;
+        }
 
         try {
 
-            String filePath = getSafeVaultPath(fileName);
+            String filePath = getSafeVaultPath(safeFileName);
 
             FileWriter writer = new FileWriter(filePath);
 
@@ -112,9 +133,9 @@ public class FileManager {
             writer.close();
 
             System.out.println("File stored successfully!");
-            System.out.println("Location: vault/" + fileName);
+            System.out.println("Location: vault/" + safeFileName);
 
-            logActivity("File stored: " + fileName);
+            logActivity("File stored: " + safeFileName);
 
         } catch (SecurityException e) {
 
@@ -125,6 +146,8 @@ public class FileManager {
             System.out.println("Error storing file.");
         }
     }
+
+
 
     public static void viewFiles() {
 
