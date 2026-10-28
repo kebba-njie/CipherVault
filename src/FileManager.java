@@ -125,29 +125,42 @@ public class FileManager {
             System.out.println("Error storing file.");
         }
     }
+
     public static void viewFiles() {
 
-        java.io.File folder = new java.io.File(".");
+        File folder = new File("vault");
 
-        java.io.File[] files = folder.listFiles();
+        if (!folder.exists() || !folder.isDirectory()) {
+            System.out.println("Vault directory does not exist.");
+            return;
+        }
+
+        File[] files = folder.listFiles();
 
         System.out.println();
         System.out.println("-------- STORED FILES --------");
 
-        if (files != null) {
+        if (files == null) {
+            System.out.println("Unable to read vault files.");
+            return;
+        }
 
-            for (java.io.File file : files) {
+        boolean filesFound = false;
 
-                if (file.isFile()) {
-                    System.out.println(file.getName());
-                }
+        for (File file : files) {
+
+            if (file.isFile()) {
+                System.out.println(file.getName());
+                filesFound = true;
             }
+        }
 
-        } else {
-
-            System.out.println("No files found.");
+        if (!filesFound) {
+            System.out.println("No files stored in the vault.");
         }
     }
+
+
     private static SecretKeySpec deriveEncryptionKey(
             String password,
             byte[] salt) {
