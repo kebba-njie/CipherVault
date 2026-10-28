@@ -92,20 +92,24 @@ public class Main {
 
         Scanner scanner = new Scanner(System.in);
 
-        System.out.println("=================================");
-        System.out.println("          CIPHERVAULT");
-        System.out.println("     Security Management System");
-        System.out.println("=================================");
-
         System.out.println();
-        System.out.println("1. Create Account");
-        System.out.println("2. Login");
-        System.out.println("3. Exit");
+        System.out.println("========================================");
+        System.out.println("              CIPHERVAULT");
+        System.out.println("       SECURITY MANAGEMENT SYSTEM");
+        System.out.println("========================================");
         System.out.println();
+        System.out.println("             MAIN MENU");
+        System.out.println("----------------------------------------");
+        System.out.println("  [1]  Create Account");
+        System.out.println("  [2]  Login");
+        System.out.println("  [3]  Exit");
+        System.out.println("----------------------------------------");
+        System.out.print("  Enter your choice: ");
 
-        System.out.print("Select an option: ");
         int choice = scanner.nextInt();
         scanner.nextLine();
+
+        System.out.println();
 
         if (choice == 1) {
 
