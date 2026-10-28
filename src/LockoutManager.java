@@ -4,12 +4,11 @@ import java.util.Scanner;
 
 public class LockoutManager {
 
-    private static final String LOCKOUT_FILE = "lockouts.txt";
+    private static final String LOCKOUT_FILE = AppConfig.LOCKOUT_FILE;
 
-    private static final int MAX_ATTEMPTS = 3;
+    private static final int MAX_ATTEMPTS = AppConfig.MAX_LOGIN_ATTEMPTS;
 
-    private static final long LOCKOUT_TIME = 5 * 60 * 1000;
-
+    private static final long LOCKOUT_TIME = AppConfig.LOCKOUT_DURATION_MILLIS;
     public static boolean isLocked(String username) {
 
         File file = new File(LOCKOUT_FILE);
