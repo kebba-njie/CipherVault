@@ -1,17 +1,19 @@
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Scanner;
-import java.io.FileOutputStream;
-import javax.crypto.Cipher;
-import javax.crypto.spec.GCMParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.SecureRandom;
+import java.util.Scanner;
+
+import javax.crypto.Cipher;
 import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 
 public class FileManager {
 
@@ -19,11 +21,11 @@ public class FileManager {
     private static final String INTEGRITY_FILE = "integrity.txt";
     private static String getSafeVaultPath(String fileName) {
 
-        java.nio.file.Path vaultPath =
-                Paths.get(VAULT_FOLDER).toAbsolutePath().normalize();
+        Path vaultPath = Paths.get(VAULT_FOLDER)
+                .toAbsolutePath()
+                .normalize();
 
-        java.nio.file.Path requestedPath =
-                vaultPath.resolve(fileName).normalize();
+        Path requestedPath = vaultPath.resolve(fileName).normalize();
 
         if (!requestedPath.startsWith(vaultPath)) {
             throw new SecurityException("Invalid file path.");
@@ -31,7 +33,6 @@ public class FileManager {
 
         return requestedPath.toString();
     }
-
     public static void initializeVault() {
 
         try {
